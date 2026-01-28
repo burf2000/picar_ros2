@@ -1,0 +1,14 @@
+# Build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+
+# Claude settings with secrets
+.claude/settings.local.json
