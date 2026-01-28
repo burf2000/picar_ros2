@@ -22,6 +22,7 @@ setup(
     entry_points={
         'console_scripts': [
             'picar_node = picar_b_driver.picar_node:main',
+            'steering_bridge = picar_b_driver.steering_bridge:main',
         ],
     },
 )

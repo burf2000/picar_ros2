@@ -48,4 +48,10 @@ def generate_launch_description():
                 'scale_linear_turbo.x': 1.0,
             }],
         ),
+        # Bridge to convert cmd_vel angular.z to /steering for Ackermann steering
+        Node(
+            package='picar_b_driver',
+            executable='steering_bridge',
+            name='steering_bridge',
+        ),
     ])

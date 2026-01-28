@@ -189,22 +189,22 @@ class PicarBNode(Node):
         self.get_logger().info(f'  Servos available: {self.servo.available}')
         self.get_logger().info(f'  Max speed: {self.max_speed}')
 
-    # ── cmd_vel → differential drive ────────────────────────────
+    # ── cmd_vel → Ackermann drive ─────────────────────────────────
     def cmd_vel_callback(self, msg: Twist):
         self.get_logger().info(f'cmd_vel: linear={msg.linear.x:.2f} angular={msg.angular.z:.2f}')
         self.last_cmd_vel_time = self.get_clock().now()
         linear = msg.linear.x   # m/s  (forward +)
         angular = msg.angular.z  # rad/s (left +)
 
-        # Convert to left/right wheel speeds (-100..100)
-        left  = linear - angular * self.wheel_sep / 2.0
-        right = linear + angular * self.wheel_sep / 2.0
+        # Drive motors based on linear velocity
+        speed = linear * self.max_speed
+        self.motor.drive(speed, speed)
 
-        # Normalise to -100..100
-        max_val = max(abs(left), abs(right), 0.001)
-        scale = min(1.0, 1.0 / max_val) * self.max_speed
-
-        self.motor.drive(left * scale, right * scale)
+        # Set steering servo based on angular velocity
+        # Clamp to ±1.0 range for servo mapping
+        steer_cmd = max(-1.0, min(1.0, angular))
+        pulse = 300 + int(steer_cmd * 100)
+        self.servo.set_angle(2, pulse)
 
     def check_cmd_vel_timeout(self):
         elapsed = (self.get_clock().now() - self.last_cmd_vel_time).nanoseconds / 1e9
