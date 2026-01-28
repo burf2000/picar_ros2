@@ -13,6 +13,7 @@ sys.path.insert(0, "/home/burf2000/adeept_picar-b/server")
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, DurabilityPolicy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Range, JointState
 from std_msgs.msg import Int8MultiArray, Float64
@@ -171,7 +172,8 @@ class PicarBNode(Node):
         # Publishers
         self.range_pub = self.create_publisher(Range, 'ultrasonic', 10)
         self.line_pub = self.create_publisher(Int8MultiArray, 'line_track', 10)
-        self.joint_pub = self.create_publisher(JointState, 'joint_states', 10)
+        joint_qos = QoSProfile(depth=10, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+        self.joint_pub = self.create_publisher(JointState, 'joint_states', joint_qos)
 
         # Timers
         ultra_period = 1.0 / self.get_parameter('ultrasonic_rate').value

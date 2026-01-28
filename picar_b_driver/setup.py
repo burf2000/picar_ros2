@@ -22,7 +22,6 @@ setup(
     entry_points={
         'console_scripts': [
             'picar_node = picar_b_driver.picar_node:main',
-            'camera_node = picar_b_driver.camera_node:main',
         ],
     },
 )

@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(ssh:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(sshpass -p 'REDACTED_PASSWORD' ssh -o StrictHostKeyChecking=accept-new burf2000@picar.local \"echo ''Connected OK'' && uname -a\")",
+      "Bash(sshpass -p 'REDACTED_PASSWORD' ssh burf2000@picar.local \"python3 -c ''import picamera2; print\\(\"\"picamera2 OK\"\"\\)'' 2>&1; python3 -c ''from cv_bridge import CvBridge; print\\(\"\"cv_bridge OK\"\"\\)'' 2>&1; dpkg -l | grep ros-humble-cv-bridge 2>&1; dpkg -l | grep libcamera 2>&1; ls ~/ros2_ws/src/ 2>&1; source /opt/ros/humble/setup.bash && ros2 pkg list 2>/dev/null | grep -E ''cv_bridge|image_transport|camera'' 2>&1\")",
+      "Bash(sshpass -p 'REDACTED_PASSWORD' ssh -t burf2000@picar.local \"echo ''REDACTED_PASSWORD'' | sudo -S apt-get update -qq 2>&1 && echo ''REDACTED_PASSWORD'' | sudo -S apt-get install -y python3-picamera2 ros-humble-cv-bridge 2>&1\")",
+      "Bash(sshpass -p 'REDACTED_PASSWORD' ssh burf2000@picar.local \"echo ''REDACTED_PASSWORD'' | sudo -S pip3 install picamera2 2>&1\")",
+      "Bash(sshpass -p 'REDACTED_PASSWORD' ssh burf2000@picar.local \"echo ''REDACTED_PASSWORD'' | sudo -S apt-get install -y libcap-dev ros-humble-cv-bridge 2>&1\")",
+      "Bash(sshpass -p 'REDACTED_PASSWORD' ssh burf2000@picar.local \"python3 -c \"\"\nfrom picamera2 import Picamera2\ncam = Picamera2\\(\\)\nconfig = cam.create_preview_configuration\\(main={''size'': \\(640, 480\\), ''format'': ''RGB888''}\\)\ncam.configure\\(config\\)\ncam.start\\(\\)\nimport time; time.sleep\\(1\\)\nframe = cam.capture_array\\(\\)\nprint\\(f''Captured frame: shape={frame.shape}, dtype={frame.dtype}''\\)\ncam.stop\\(\\)\nprint\\(''Camera test PASSED''\\)\n\"\" 2>&1\")",
+      "Bash(sshpass -p 'REDACTED_PASSWORD' ssh burf2000@picar.local \"echo ''REDACTED_PASSWORD'' | sudo -S apt-get install -y python3-libcamera python3-kms++ libcamera-tools 2>&1\")",
+      "Bash(sshpass -p 'REDACTED_PASSWORD' ssh burf2000@picar.local \"echo ''REDACTED_PASSWORD'' | sudo -S apt-get install -y ros-humble-camera-ros libcamera-tools v4l-utils 2>&1\")",
+      "Bash(sshpass -p 'REDACTED_PASSWORD' scp:*)",
+      "Bash(sshpass:*)"
     ]
   }
 }

@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ROS2 Humble driver for the Adeept PiCar-B Mars Rover running on a Raspberry Pi (hostname: `picar`, IP: 192.168.20.110, Ubuntu 22.04 arm64).
 
 Two ament_python packages:
-- **picar_b_driver** — Hardware driver node (`picar_node`) and camera node (`camera_node`) that control motors, servos, ultrasonic sensor, line trackers, and Pi Camera via GPIO/I2C/libcamera
-- **picar_b_description** — URDF robot model and visualization launch file
+- **picar_b_driver** — Hardware driver node (`picar_node`) and launch config for `camera_ros` (libcamera). Controls motors, servos, ultrasonic sensor, and line trackers via GPIO/I2C.
+- **picar_b_description** — URDF robot model, RViz config, and desktop launch file.
 
 ## Build & Test Commands
 
@@ -23,36 +23,51 @@ source install/setup.bash
 colcon test --packages-select picar_b_driver
 colcon test-result --verbose
 
-# Launch driver node (on Pi only — requires GPIO hardware)
+# Launch driver + camera on Pi (also runs as systemd service on boot)
 ros2 launch picar_b_driver picar_b.launch.py
 
-# Launch URDF visualization (for RViz)
-ros2 launch picar_b_description display.launch.py
+# Launch desktop visualisation (RViz — connects to Pi over network)
+ros2 launch picar_b_description desktop.launch.py
 ```
 
 ## Deployment to Pi
 
 ```bash
 scp -r picar_b_driver/ picar_b_description/ burf2000@picar.local:~/ros2_ws/src/
-# Then SSH to Pi, cd ~/ros2_ws, colcon build, source, launch
+# Then SSH to Pi:
+#   cd ~/ros2_ws && colcon build --packages-select picar_b_driver picar_b_description
+#   sudo systemctl restart picar_ros2.service
 ```
+
+The Pi runs a systemd service (`picar_ros2.service`) that auto-starts the driver on boot.
 
 ## Architecture
 
-### picar_node.py — the single driver node
+### picar_b.launch.py — Pi launch (runs on robot)
+
+Starts three nodes:
+1. **robot_state_publisher** — publishes URDF TF tree from `picar_b_description`
+2. **picar_node** — hardware driver (motors, servos, sensors, joint states)
+3. **camera_node** (`camera_ros` package) — Pi Camera via libcamera, publishes `/camera/image_raw`
+
+### picar_node.py — the hardware driver node
 
 Contains four hardware helper classes and the main ROS2 node:
 
 - **MotorDriver** — differential drive via Adeept's `GUImove` library (GPIO 4,14,15,17,27,18). Note: GUImove "backward" = physically forward.
 - **UltrasonicSensor** — HC-SR04 on GPIO 11 (trigger) / GPIO 8 (echo), returns distance in meters.
 - **LineTracker** — 3 IR sensors on GPIO 20, 16, 19; returns binary array [left, middle, right].
-- **ServoDriver** — PCA9685 I2C PWM controller. Channel 0=camera_tilt, 1=camera_pan, 2=wheel_steering (steering servo is burnt out).
+- **ServoDriver** — PCA9685 I2C PWM controller. Channel 0=camera_tilt, 1=camera_pan, 2=wheel_steering.
 
 **Subscriptions:** `/cmd_vel` (Twist), `/servo/pan` (Float64), `/servo/tilt` (Float64), `/steering` (Float64)
 
-**Publishers:** `/ultrasonic` (Range at 10Hz), `/line_track` (Int8MultiArray at 20Hz), `/joint_states` (JointState at 20Hz — pan, tilt, steering positions)
+**Publishers:** `/ultrasonic` (Range at 10Hz), `/line_track` (Int8MultiArray at 20Hz), `/joint_states` (JointState at 20Hz with TRANSIENT_LOCAL QoS — pan, tilt, steering positions)
 
 **Parameters:** `max_speed` (80.0), `wheel_separation` (0.15m), `ultrasonic_rate` (10.0Hz), `line_track_rate` (20.0Hz), `cmd_vel_timeout` (0.5s auto-stop)
+
+### desktop.launch.py — desktop launch (runs on dev machine)
+
+Launches RViz2 with pre-configured display for robot model, camera feed, and ultrasonic range. Connects to Pi topics over ROS2 DDS multicast.
 
 ### URDF model (picarb.urdf)
 
@@ -63,12 +78,6 @@ Plain URDF (not xacro). Key joints: rear wheels (continuous/driven), front Acker
 - Pan: `300 - msg.data * 150` (lower pulse = left)
 - Tilt: `300 + msg.data * 100` (higher pulse = up, inverted)
 - Steering: `300 + msg.data * 150`
-
-### camera_node.py — Pi Camera driver
-
-Uses `picamera2` (libcamera) and `cv_bridge` to publish:
-- `/camera/image_raw` (Image) and `/camera/camera_info` (CameraInfo)
-- Parameters: `width` (640), `height` (480), `fps` (15.0), `frame_id` ("camera_link")
 
 ### Hardware dependency
 

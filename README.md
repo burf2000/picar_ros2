@@ -54,7 +54,7 @@ Joint mapping to PCA9685 servo channels:
 |------------|---------------|-------|
 | `camera_tilt_joint` | Ch 0 | Inverted: higher pulse = up |
 | `camera_pan_joint` | Ch 1 | Lower pulse = left |
-| `steering_joint` | Ch 2 | **Currently dead** (burnt out) |
+| `steering_joint` | Ch 2 | Ackermann front steering |
 
 Launch the robot model:
 
