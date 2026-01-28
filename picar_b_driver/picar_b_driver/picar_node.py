@@ -223,8 +223,9 @@ class PicarBNode(Node):
         self.servo.set_angle(0, pulse)
 
     def steering_callback(self, msg: Float64):
-        # Channel 2 = wheel steering
-        pulse = 300 + int(msg.data * 150)
+        # Channel 2 = wheel steering (higher pulse = left)
+        pulse = 300 + int(msg.data * 100)
+        self.get_logger().info(f'Steering: data={msg.data:.2f} pulse={pulse}')
         self.servo.set_angle(2, pulse)
 
     # ── Sensor publishers ───────────────────────────────────────
@@ -249,7 +250,7 @@ class PicarBNode(Node):
         # Invert the servo PWM mapping to recover radians
         pan_rad = (300 - self.servo.pos.get(1, 300)) / 150.0
         tilt_rad = (self.servo.pos.get(0, 300) - 300) / 100.0
-        steer_rad = (self.servo.pos.get(2, 300) - 300) / 150.0
+        steer_rad = (300 - self.servo.pos.get(2, 300)) / 150.0
         msg.position = [pan_rad, tilt_rad, steer_rad]
         self.joint_pub.publish(msg)
 

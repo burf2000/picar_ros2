@@ -77,7 +77,7 @@ Plain URDF (not xacro). Key joints: rear wheels (continuous/driven), front Acker
 
 - Pan: `300 - msg.data * 150` (lower pulse = left)
 - Tilt: `300 + msg.data * 100` (higher pulse = up, inverted)
-- Steering: `300 + msg.data * 150`
+- Steering: `300 - msg.data * 150` (lower pulse = left)
 
 ### Hardware dependency
 
